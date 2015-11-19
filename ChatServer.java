@@ -8,7 +8,8 @@ import java.util.*;
  * server for you and your friends to communicate.
  * 
  * @author (name) <(username@purdue.edu)>
- * 
+ * @author (name) <(username@purdue.edu)>
+ *
  * @lab (Your Lab Section)
  * 
  * @version (Today's Date)
@@ -17,8 +18,67 @@ import java.util.*;
 public class ChatServer {
 	
 	public ChatServer(User[] users, int maxMessages) {
-		// TODO Complete the constructor
+		// TODO: Replace the following code with the actual code
+		
 	}
+
+	/**
+	 * Usernames and passwords can only contain alphanumerical values [A-Za-z0-9].
+	 * Usernames must be between 1 and 20 characters in length (inclusive).
+	 * Password must be between 4 and 40 characters in length (inclusive).
+	 * @param args
+	 * @return
+	 */
+	public String addUser(String[] args) {
+
+	}
+
+	/**
+	 * the user must already have been created earlier through addUser
+	 * the given user shouldn't already be authenticated (the SessionCookie associated should be null)
+	 * the password must be correct
+	 * If every condition is met, then the method generates a new SessionCookie for the user to indicate that she is
+	 * now connected.
+	 * @param args
+	 * @return
+	 */
+	public String userLogin(String[] args) {
+
+	}
+
+	/**
+	 * The name variable is the username of the User sending the message.
+	 * For the request to succeed, the message should contain at least 1 character after removing leading and trailing
+	 * white spaces from the message.
+	 * Messages have no limit on their length.
+	 * The username of the poster should be displayed first, followed by a colon, a space, and then the message.
+	 * For example, if my username is cs180 and I posted the message “Hello, World” then the server should store
+	 * the message as:
+	 * "cs180: Hello, World!"
+	 * @param args
+	 * @param name
+	 * @return
+	 */
+	public String postMessage(String[] args, String name) {
+
+	}
+
+	/**
+	 * For the request to succeed, the number of messages requested must be >= 1, otherwise an
+	 * INVALID_VALUE_ERROR (error #24) should be returned.
+	 * The number of messages required can be higher than the number of available messages,
+	 * the function returns as many as possible. It can also return 0 messages if none are available (SUCCESS\r\n).
+	 * Messages should be listed in chronological order with the oldest messages at the beginning.
+	 * For example, if my username was cs180 and I posted the messages “Hello, World” and then “What's up?”,
+	 * the ASCII server response would look like this:
+	 * "SUCCESS\t0000) cs180: Hello, World!\t0001) cs180: What's up?\r\n"
+	 * @param args
+	 * @return
+	 */
+	public String getMessages(String[] args) {
+
+	}
+
 
 	/**
 	 * This method begins server execution.
