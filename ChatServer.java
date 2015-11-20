@@ -1,17 +1,18 @@
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 /**
  * <b> CS 180 - Project 4 - Chat Server Skeleton </b>
  * <p>
- * 
+ *
  * This is the skeleton code for the ChatServer Class. This is a private chat
  * server for you and your friends to communicate.
- * 
+ *
  * @author (name) <(username@purdue.edu)>
  * @author (name) <(username@purdue.edu)>
  *
  * @lab (Your Lab Section)
- * 
+ *
  * @version (Today's Date)
  *
  */
@@ -21,15 +22,15 @@ public class ChatServer {
 	long[] messageCookies;
 	int numofMessages;
 	User[] users;
-	int numUsers;
+	int numUsers = 1;
+	CircularBuffer circularB;
 
 	public ChatServer(User[] users, int maxMessages) {
+		users[0] = new User("root", "cs180", null);
 		this.users = users;
-		this.messagesStored = null;
+		this.messagesStored = new String[10];
 		this.numofMessages = 0;
-		this.numUsers = 1;
-		users[0] = new User("root", "cs180", new SessionCookie(0));
-
+		this.circularB = new CircularBuffer(maxMessages);
 	}
 
 	/**
@@ -46,17 +47,17 @@ public class ChatServer {
 			}
 		}
 		if (args[2].matches("[A-Za-z0-9]+") && args[3].matches("[A-Za-z0-9]+")) {
-	            if (args[2].length() > 1 && args[2].length() < 20) {
-	                if (args[3].length() > 4 && args[3].length() < 40) {
-	                    SessionCookie sc = new SessionCookie(Long.parseLong(args[1]));
-	                    User u = new User(args[2], args[3], sc);
-	                    this.users[numUsers] = u;
-	                    numUsers++;
-	                    return "SUCCESS\r\n";
-	                }
-	            }
-	        }
-		return MessageFactory.makeErrorMessage(MessageFactory.USERNAME_LOOKUP_ERROR);
+			if (args[2].length() > 1 && args[2].length() < 20) {
+				if (args[3].length() > 4 && args[3].length() < 40) {
+					SessionCookie sc = new SessionCookie(Long.parseLong(args[1]));
+					User u = new User(args[2], args[3], null);
+					this.users[numUsers] = u;
+					numUsers++;
+					return "SUCCESS\r\n";
+				}
+			}
+		}
+		return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
 	}
 
 	/**
@@ -102,14 +103,18 @@ public class ChatServer {
 	 * @return
 	 */
 	public String postMessage(String[] args, String name) {
-		if (args[2].trim().length() > 1) {
-				messagesStored[numofMessages] = name + ":" + args[2];
-				numofMessages++;
-				messageCookies[numofMessages] = Long.parseLong(args[1]);
-				return "SUCCESS\r\n";
-			}
-		return MessageFactory.makeErrorMessage(MessageFactory.AUTHENTICATION_ERROR);
+		if (args[2].trim().length() > 0) {
+			messagesStored[numofMessages] = name + ": " + args[2];
+			numofMessages++;
+//			messageCookies[numofMessages] = Long.parseLong(args[1]);
+			return "SUCCESS\r\n";
+		}
+		return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
 	}
+
+	//			messagesStored[numofMessages] = name + ": " + args[2];
+//				numofMessages++;
+//				messageCookies[numofMessages] = Long.parseLong(args[1]);
 
 	/**
 	 * For the request to succeed, the number of messages requested must be >= 1, otherwise an
@@ -124,18 +129,43 @@ public class ChatServer {
 	 * @return
 	 */
 	public String getMessages(String[] args) {
-		if (Integer.parseInt(args[2]) < 1) {
+		System.out.println("args[2] input: " + args[2] + "args[1] is: " + args[1] + "\n length of the args is " + args[2].length());
+		if (Integer.parseInt(args[2]) < 0) {
 			return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
 		}
-		if (Integer.parseInt(args[2]) >= 1) {
-			String messages = "";
-			for (int i = 0; i < numofMessages; i++) {
-				messages += messageCookies[numofMessages] + ") " + messagesStored[numofMessages] +"\t";
+		if (Integer.parseInt(args[2]) == 0) {
+			return "SUCCESS\r\n";
+		}
+		if (Integer.parseInt(args[2]) > 0) {
+			for (int i = 0; i < Integer.parseInt(args[2]); i++) {
+				if (circularB.getNewest(Integer.parseInt(args[2])).length > Integer.parseInt(args[2])) {
+					return "SUCCESS\t" + circularB.getNewest(Integer.parseInt(args[2]))[i] + "\r\n";
+				}
 			}
-			return "SUCCESS\t" + messages + "\r\n";
 		}
 		return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
+
 	}
+//		System.out.println("args[2] input: " + args[2] + "args[3] is: " + args[1] + " length of the args is " + args[2].length());
+//		boolean getMes = false;
+//		int x;
+//		try {
+//			//if (Integer.parseInt(args[2]) < 1);
+//				x = Integer.parseInt(args[2]);
+//		} catch (Exception e) {
+//			x = -100;
+//			//return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
+//		}
+//		if (x == -100) {
+//			return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
+//		}
+//		if (x >= 1) {
+//			for (int i = 0; i < numofMessages; i++) {
+//				return "SUCCESS\t" + circularB.getNewest(Integer.parseInt(args[2]))[i] + "\r\n";
+//			}
+//		}
+//		return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
+//	}
 
 	/**
 	 * This method begins server execution.
@@ -190,7 +220,7 @@ public class ChatServer {
 	 * includes the "\" as a character instead of entering the escape character.
 	 * This function replaces the incorrectly inputed characters with their
 	 * proper escaped characters.
-	 * 
+	 *
 	 * @param str
 	 *            - the string to be edited
 	 * @return the properly escaped string
@@ -206,26 +236,29 @@ public class ChatServer {
 	/**
 	 * Determines which client command the request is using and calls the
 	 * function associated with that command.
-	 * 
+	 *
 	 * @param request
 	 *            - the full line of the client request (CRLF included)
 	 * @return the server response
 	 */
 	public String parseRequest(String request) {
 		String[] parts = request.split("\t");
-		long sessionCookie = Long.parseLong(parts[1]);
-		SessionCookie sc = new SessionCookie(sessionCookie);
 		switch (parts[0]) {
 			case "ADD-USER":
-				if (parts.length != 4) {
-					return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
-				} else if (parts[1] == null) {
-					return MessageFactory.makeErrorMessage(MessageFactory.AUTHENTICATION_ERROR);
-				} else if (sc.hasTimedOut()) {
-					parts[1] = null;
-					return MessageFactory.makeErrorMessage(MessageFactory.COOKIE_TIMEOUT_ERROR);
-				} else {
-					return this.addUser(parts);
+				if (parts[1] != null) {
+					long sessionCookie = Long.parseLong(parts[1]);
+					System.out.println(" index 1 is: add-message " + Long.parseLong(parts[1]));
+					SessionCookie sc = new SessionCookie(sessionCookie);
+					if (parts.length != 4) {
+						return MessageFactory.makeErrorMessage(MessageFactory.FORMAT_COMMAND_ERROR);
+					} else if (parts[1] == null) {
+						return MessageFactory.makeErrorMessage(MessageFactory.AUTHENTICATION_ERROR);
+					} else if (sc.hasTimedOut()) {
+						parts[1] = null;
+						return MessageFactory.makeErrorMessage(MessageFactory.COOKIE_TIMEOUT_ERROR);
+					} else {
+						return this.addUser(parts);
+					}
 				}
 			case "USER-LOGIN":
 				if (parts.length != 3) {
@@ -234,35 +267,39 @@ public class ChatServer {
 					return this.userLogin(parts);
 				}
 			case "POST-MESSAGE":
-				if (parts.length != 3) {
-					return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
-				} else if (parts[0] == null) {
-					return MessageFactory.makeErrorMessage(MessageFactory.AUTHENTICATION_ERROR);
-				} else if (sc.hasTimedOut()) {
-					parts[1] = null;
-					return MessageFactory.makeErrorMessage(MessageFactory.COOKIE_TIMEOUT_ERROR);
-				} else {
-					String name = null;
-					for (int i = 0; i < users.length; i++) {
-						if(Long.parseLong(parts[1]) == users[i].getCookie().getID()) {
-							name = users[i].getName();
+				if (parts[1] != null) {
+//					long sessionCookie = Long.parseLong(parts[1]);
+//					System.out.println(" index 1 is: post-message " + Long.parseLong(parts[1]));
+//					SessionCookie sc = new SessionCookie(sessionCookie);
+					if (parts.length != 3) {
+						return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
+					} else if (parts[0] == null) {
+						return MessageFactory.makeErrorMessage(MessageFactory.AUTHENTICATION_ERROR);
+//					} else if (sc.hasTimedOut()) {
+//						parts[1] = null;
+//						return MessageFactory.makeErrorMessage(MessageFactory.COOKIE_TIMEOUT_ERROR);
+					} else {
+						String name = null;
+						for (int i = 0; i < users.length; i++) {
+							if (Long.parseLong(parts[1]) == users[i].getCookie().getID()) {
+								name = users[i].getName();
+							}
 						}
+						return this.postMessage(parts, name);
 					}
-					return this.postMessage(parts, name);
 				}
 			case "GET-MESSAGES":
-				if (parts.length != 3) {
-					return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
-				} else if (parts[0] == null) {
-					return MessageFactory.makeErrorMessage(MessageFactory.AUTHENTICATION_ERROR);
-				} else if (sc.hasTimedOut()) {
-					parts[1] = null;
-					return MessageFactory.makeErrorMessage(MessageFactory.COOKIE_TIMEOUT_ERROR);
-				} else {
-					return this.getMessages(parts);
+				if (parts[1] != null) {
+					if (parts.length != 3) {
+						return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
+					} else if (parts[0] == null) {
+						return MessageFactory.makeErrorMessage(MessageFactory.AUTHENTICATION_ERROR);
+					} else {
+						return this.getMessages(parts);
+					}
 				}
 			default:
-				return MessageFactory.makeErrorMessage(MessageFactory.UNKNOWN_COMMAND_ERROR);
+				return MessageFactory.makeErrorMessage(MessageFactory.FORMAT_COMMAND_ERROR);
 		}
 	}
 }
