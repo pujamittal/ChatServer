@@ -97,57 +97,8 @@ public class ChatServer {
 	 *            - the full line of the client request (CRLF included)
 	 * @return the server response
 	 */
-    public String parseRequest(String request) {
-        String[] parts = request.split("\t");
-        long sessionCookie = Long.parseLong(parts[1]);
-        SessionCookie sc = new SessionCookie(sessionCookie);
-        switch (parts[0]) {
-            case "ADD-USER":
-                if (parts.length != 4) {
-                    // TODO: return error
-                } else if (parts[1] == null) {
-                    // TODO: return error
-                } else if (sc.hasTimedOut()) {
-                    parts[1] = null;
-                    // TODO: return error
-                } else {
-                    return this.addUser(parts);
-                }
-                break;
-            case "USER-LOGIN":
-                if (parts.length != 3) {
-                    // TODO: return error
-                } else {
-                    return this.userLogin(parts);
-                }
-                break;
-            case "POST-MESSAGE":
-                if (parts.length != 3) {
-                    // TODO: return error
-                } else if (parts[0] == null) {
-                    // TODO: return error
-                } else if (sc.hasTimedOut()) {
-                    parts[1] = null;
-                    // TODO: return error
-                } else {
-                    return this.postMessage(parts);
-                }
-                break;
-            case "GET-MESSAGES":
-                if (parts.length != 3) {
-                    // TODO: return error
-                } else if (parts[0] == null) {
-                    // TODO: return error
-                } else if (sc.hasTimedOut()) {
-                    parts[1] = null;
-                    // TODO: return error
-                } else {
-                    return this.getMessages(parts);
-                }
-                break;
-            default:
-                return null;
-        }
-        return null;
-    }
+	public String parseRequest(String request) {
+		// TODO: Replace the following code with the actual code
+		return request;
+	}
 }
