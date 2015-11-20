@@ -25,6 +25,10 @@ public class User {
     public String getName() {
         return username;
     }
+    
+    public String getPassword() {
+        return password;
+    }
 
     /**
      * This method returns true if the given password matches the user's password exactly. Otherwise, false is returned.
