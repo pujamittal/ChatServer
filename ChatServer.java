@@ -28,7 +28,7 @@ public class ChatServer {
 	public ChatServer(User[] users, int maxMessages) {
 		users[0] = new User("root", "cs180", null);
 		this.users = users;
-		this.messagesStored = new String[10];
+		this.messagesStored = new String[maxMessages];
 		this.numofMessages = 0;
 		this.circularB = new CircularBuffer(maxMessages);
 	}
@@ -106,15 +106,10 @@ public class ChatServer {
 		if (args[2].trim().length() > 0) {
 			messagesStored[numofMessages] = name + ": " + args[2];
 			numofMessages++;
-//			messageCookies[numofMessages] = Long.parseLong(args[1]);
 			return "SUCCESS\r\n";
 		}
 		return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
 	}
-
-	//			messagesStored[numofMessages] = name + ": " + args[2];
-//				numofMessages++;
-//				messageCookies[numofMessages] = Long.parseLong(args[1]);
 
 	/**
 	 * For the request to succeed, the number of messages requested must be >= 1, otherwise an
