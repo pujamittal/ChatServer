@@ -25,7 +25,11 @@ public class User {
     public String getName() {
         return username;
     }
-    
+
+    /**
+     * This method returns the password of the user.
+     * @return
+     */
     public String getPassword() {
         return password;
     }

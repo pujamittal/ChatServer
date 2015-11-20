@@ -16,13 +16,20 @@ import java.util.*;
  *
  */
 public class ChatServer {
-	User[] users;
-    	int numUsers = 1;
 
-    	public ChatServer(User[] users, int maxMessages) {
-        	this.users = users;
-        	users[0] = new User("root", "cs180", new SessionCookie(0));
-    	}
+	String[] messagesStored;
+	int numofMessages;
+	User[] users;
+	int numUsers = 1;
+
+	public ChatServer(User[] users, int maxMessages) {
+		// TODO: Replace the following code with the actual code
+		users[0] = new User("root", "cs180", new SessionCookie(0));
+		this.users = users;
+		this.messagesStored = null;
+		this.numofMessages = 0;
+
+	}
 
 	/**
 	 * Usernames and passwords can only contain alphanumerical values [A-Za-z0-9].
@@ -32,22 +39,22 @@ public class ChatServer {
 	 * @return
 	 */
 	public String addUser(String[] args) {
-        for (int i = 0; i < args.length; i++) {
-            if (args[i] == null) {
-                return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
-            }
-        }
-        if (args[2].matches("[A-Za-z0-9]+") && args[3].matches("[A-Za-z0-9]+")) {
-            if (args[2].length() > 1 && args[2].length() < 20) {
-                if (args[3].length() > 4 && args[3].length() < 40) {
-                    SessionCookie sc = new SessionCookie(Long.parseLong(args[1]));
-                    new User(args[2], args[3], sc);
-                    return "SUCCESS\r\n";
-                }
-            }
-        }
-        return MessageFactory.makeErrorMessage(MessageFactory.USERNAME_LOOKUP_ERROR);
-    }
+		for (int i = 0; i < args.length; i++) {
+			if (args[i] == null) {
+				return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
+			}
+		}
+		if (args[2].matches("[A-Za-z0-9]+") && args[3].matches("[A-Za-z0-9]+")) {
+			if (args[2].length() > 1 && args[2].length() < 20) {
+				if (args[3].length() > 4 && args[3].length() < 40) {
+					SessionCookie sc = new SessionCookie(Long.parseLong(args[1]));
+					new User(args[2], args[3], sc);
+					return "SUCCESS\r\n";
+				}
+			}
+		}
+		return MessageFactory.makeErrorMessage(MessageFactory.USERNAME_LOOKUP_ERROR);
+	}
 
 	/**
 	 * the user must already have been created earlier through addUser
@@ -59,24 +66,24 @@ public class ChatServer {
 	 * @return
 	 */
 	public String userLogin(String[] args) {
-        for (int i = 0; i < users.length; i++) {
-            if (args[1].equals(users[i])) {
-                if (users[i].getCookie() != null) {
-                    if (users[i].getPassword().equals(args[2])) {
-                        Random idGenerator = new Random();
-                        long cookieID = idGenerator.nextInt(9999);
-                        String cookieIDs = String.format("%04d", cookieID);
-                        SessionCookie sc = new SessionCookie(cookieID);
-                        users[i].setCookie(sc);
-                        return "SUCCESS\t" + cookieIDs + "\r\n";
-                    }
-                }
-            } else {
-                MessageFactory.makeErrorMessage(MessageFactory.USERNAME_LOOKUP_ERROR);
-            }
-        }
-        return MessageFactory.makeErrorMessage(MessageFactory.USER_ERROR);
-    }
+		for (int i = 0; i < users.length; i++) {
+			if (args[1].equals(users[i])) {
+				if (users[i].getCookie() != null) {
+					if (users[i].getPassword().equals(args[2])) {
+						Random idGenerator = new Random();
+						long cookieID = idGenerator.nextInt(9999);
+						String cookieIDs = String.format("%04d", cookieID);
+						SessionCookie sc = new SessionCookie(cookieID);
+						users[i].setCookie(sc);
+						return "SUCCESS\t" + cookieIDs + "\r\n";
+					}
+				}
+			} else {
+				MessageFactory.makeErrorMessage(MessageFactory.USERNAME_LOOKUP_ERROR);
+			}
+		}
+		return MessageFactory.makeErrorMessage(MessageFactory.USER_ERROR);
+	}
 
 	/**
 	 * The name variable is the username of the User sending the message.
@@ -92,7 +99,14 @@ public class ChatServer {
 	 * @return
 	 */
 	public String postMessage(String[] args, String name) {
-
+		for (int i = 0; i < args.length; i++) {
+			if (args[2].trim().length() > 1) {
+				numofMessages++;
+				messagesStored[numofMessages - 1] = name + ":" + args[2];
+				return "SUCCESS\r\n";
+			}
+		}
+		return MessageFactory.makeErrorMessage(MessageFactory.AUTHENTICATION_ERROR);
 	}
 
 	/**
@@ -108,6 +122,12 @@ public class ChatServer {
 	 * @return
 	 */
 	public String getMessages(String[] args) {
+		if (args[2].length() <= 1) {
+			return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
+		}
+		if (args[2].length() == 0) {
+		}
+		return "SUCCESS\r\n";
 
 	}
 
@@ -188,49 +208,52 @@ public class ChatServer {
 	 */
 	public String parseRequest(String request) {
 		String[] parts = request.split("\t");
-        	long sessionCookie = Long.parseLong(parts[1]);
-        	SessionCookie sc = new SessionCookie(sessionCookie);
-        	switch (parts[0]) {
-            case "ADD-USER":
-                if (parts.length != 4) {
-                    return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
-                } else if (parts[1] == null) {
-                    return MessageFactory.makeErrorMessage(MessageFactory.AUTHENTICATION_ERROR);
-                } else if (sc.hasTimedOut()) {
-                    parts[1] = null;
-                    return MessageFactory.makeErrorMessage(MessageFactory.COOKIE_TIMEOUT_ERROR);
-                } else {
-                    return this.addUser(parts);
-                }
-            case "USER-LOGIN":
-                if (parts.length != 3) {
-                    return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
-                } else {
-                    return this.userLogin(parts);
-                }
-            case "POST-MESSAGE":
-                if (parts.length != 3) {
-                    return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
-                } else if (parts[0] == null) {
-                    return MessageFactory.makeErrorMessage(MessageFactory.AUTHENTICATION_ERROR);
-                } else if (sc.hasTimedOut()) {
-                    parts[1] = null;
-                    return MessageFactory.makeErrorMessage(MessageFactory.COOKIE_TIMEOUT_ERROR);
-                } else {
-                    return this.postMessage(parts);
-                }
-            case "GET-MESSAGES":
-                if (parts.length != 3) {
-                    return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
-                } else if (parts[0] == null) {
-                    return MessageFactory.makeErrorMessage(MessageFactory.AUTHENTICATION_ERROR);
-                } else if (sc.hasTimedOut()) {
-                    parts[1] = null;
-                    return MessageFactory.makeErrorMessage(MessageFactory.COOKIE_TIMEOUT_ERROR);
-                } else {
-                    return this.getMessages(parts);
-                }
-            default:
-                return MessageFactory.makeErrorMessage(MessageFactory.UNKNOWN_COMMAND_ERROR);
-        }
+		long sessionCookie = Long.parseLong(parts[1]);
+		SessionCookie sc = new SessionCookie(sessionCookie);
+		switch (parts[0]) {
+			case "ADD-USER":
+				if (parts.length != 4) {
+					return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
+				} else if (parts[1] == null) {
+					return MessageFactory.makeErrorMessage(MessageFactory.AUTHENTICATION_ERROR);
+				} else if (sc.hasTimedOut()) {
+					parts[1] = null;
+					return MessageFactory.makeErrorMessage(MessageFactory.COOKIE_TIMEOUT_ERROR);
+				} else {
+					return this.addUser(parts);
+				}
+			case "USER-LOGIN":
+				if (parts.length != 3) {
+					return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
+				} else {
+					return this.userLogin(parts);
+				}
+			case "POST-MESSAGE":
+				if (parts.length != 3) {
+					return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
+				} else if (parts[0] == null) {
+					return MessageFactory.makeErrorMessage(MessageFactory.AUTHENTICATION_ERROR);
+				} else if (sc.hasTimedOut()) {
+					parts[1] = null;
+					return MessageFactory.makeErrorMessage(MessageFactory.COOKIE_TIMEOUT_ERROR);
+				} else {
+					return this.postMessage(parts, );
+				}
+			case "GET-MESSAGES":
+				if (parts.length != 3) {
+					return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
+				} else if (parts[0] == null) {
+					return MessageFactory.makeErrorMessage(MessageFactory.AUTHENTICATION_ERROR);
+				} else if (sc.hasTimedOut()) {
+					parts[1] = null;
+					return MessageFactory.makeErrorMessage(MessageFactory.COOKIE_TIMEOUT_ERROR);
+				} else {
+					return this.getMessages(parts);
+				}
+			default:
+				return MessageFactory.makeErrorMessage(MessageFactory.UNKNOWN_COMMAND_ERROR);
+		}
+	}
+
+
 }
