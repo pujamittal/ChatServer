@@ -30,8 +30,22 @@ public class ChatServer {
 	 * @return
 	 */
 	public String addUser(String[] args) {
-
-	}
+        for (int i = 0; i < args.length; i++) {
+            if (args[i] == null) {
+                return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
+            }
+        }
+        if (args[2].matches("[A-Za-z0-9]+") && args[3].matches("[A-Za-z0-9]+")) {
+            if (args[2].length() > 1 && args[2].length() < 20) {
+                if (args[3].length() > 4 && args[3].length() < 40) {
+                    SessionCookie sc = new SessionCookie(Long.parseLong(args[1]));
+                    new User(args[2], args[3], sc);
+                    return "SUCCESS\r\n";
+                }
+            }
+        }
+        return MessageFactory.makeErrorMessage(MessageFactory.USERNAME_LOOKUP_ERROR);
+    }
 
 	/**
 	 * the user must already have been created earlier through addUser
