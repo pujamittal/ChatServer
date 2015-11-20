@@ -20,14 +20,14 @@ public class ChatServer {
 	String[] messagesStored;
 	int numofMessages;
 	User[] users;
-	int numUsers = 1;
+	int numUsers;
 
 	public ChatServer(User[] users, int maxMessages) {
-		// TODO: Replace the following code with the actual code
-		users[0] = new User("root", "cs180", new SessionCookie(0));
 		this.users = users;
 		this.messagesStored = null;
 		this.numofMessages = 0;
+		this.numUsers = 1;
+		users[0] = new User("root", "cs180", new SessionCookie(0));
 
 	}
 
@@ -45,14 +45,16 @@ public class ChatServer {
 			}
 		}
 		if (args[2].matches("[A-Za-z0-9]+") && args[3].matches("[A-Za-z0-9]+")) {
-			if (args[2].length() > 1 && args[2].length() < 20) {
-				if (args[3].length() > 4 && args[3].length() < 40) {
-					SessionCookie sc = new SessionCookie(Long.parseLong(args[1]));
-					new User(args[2], args[3], sc);
-					return "SUCCESS\r\n";
-				}
-			}
-		}
+	            if (args[2].length() > 1 && args[2].length() < 20) {
+	                if (args[3].length() > 4 && args[3].length() < 40) {
+	                    SessionCookie sc = new SessionCookie(Long.parseLong(args[1]));
+	                    User u = new User(args[2], args[3], sc);
+	                    this.users[numUsers] = u;
+	                    numUsers++;
+	                    return "SUCCESS\r\n";
+	                }
+	            }
+	        }
 		return MessageFactory.makeErrorMessage(MessageFactory.USERNAME_LOOKUP_ERROR);
 	}
 
