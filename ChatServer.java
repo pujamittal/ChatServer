@@ -18,6 +18,7 @@ import java.util.*;
 public class ChatServer {
 
 	String[] messagesStored;
+	long[] messageCookies;
 	int numofMessages;
 	User[] users;
 	int numUsers;
@@ -101,13 +102,12 @@ public class ChatServer {
 	 * @return
 	 */
 	public String postMessage(String[] args, String name) {
-		for (int i = 0; i < args.length; i++) {
-			if (args[2].trim().length() > 1) {
+		if (args[2].trim().length() > 1) {
+				messagesStored[numofMessages] = name + ":" + args[2];
 				numofMessages++;
-				messagesStored[numofMessages - 1] = name + ":" + args[2];
+				messageCookies[numofMessages] = Long.parseLong(args[1]);
 				return "SUCCESS\r\n";
 			}
-		}
 		return MessageFactory.makeErrorMessage(MessageFactory.AUTHENTICATION_ERROR);
 	}
 
@@ -124,15 +124,18 @@ public class ChatServer {
 	 * @return
 	 */
 	public String getMessages(String[] args) {
-		if (args[2].length() <= 1) {
+		if (Integer.parseInt(args[2]) < 1) {
 			return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
 		}
-		if (args[2].length() == 0) {
-			return "SUCCESS\r\n";
+		if (Integer.parseInt(args[2]) >= 1) {
+			String messages = "";
+			for (int i = 0; i < numofMessages; i++) {
+				messages += messageCookies[numofMessages] + ") " + messagesStored[numofMessages] +"\t";
+			}
+			return "SUCCESS\t" + messages + "\r\n";
 		}
 		return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
 	}
-
 
 	/**
 	 * This method begins server execution.
@@ -239,7 +242,13 @@ public class ChatServer {
 					parts[1] = null;
 					return MessageFactory.makeErrorMessage(MessageFactory.COOKIE_TIMEOUT_ERROR);
 				} else {
-					return this.postMessage(parts, );
+					String name = null;
+					for (int i = 0; i < users.length; i++) {
+						if(Long.parseLong(parts[1]) == users[i].getCookie().getID()) {
+							name = users[i].getName();
+						}
+					}
+					return this.postMessage(parts, name);
 				}
 			case "GET-MESSAGES":
 				if (parts.length != 3) {
@@ -256,6 +265,4 @@ public class ChatServer {
 				return MessageFactory.makeErrorMessage(MessageFactory.UNKNOWN_COMMAND_ERROR);
 		}
 	}
-
-
 }
