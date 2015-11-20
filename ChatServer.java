@@ -156,55 +156,49 @@ public class ChatServer {
 	 */
 	public String parseRequest(String request) {
 		String[] parts = request.split("\t");
-        long sessionCookie = Long.parseLong(parts[1]);
-        SessionCookie sc = new SessionCookie(sessionCookie);
-        switch (parts[0]) {
+        	long sessionCookie = Long.parseLong(parts[1]);
+        	SessionCookie sc = new SessionCookie(sessionCookie);
+        	switch (parts[0]) {
             case "ADD-USER":
                 if (parts.length != 4) {
-                    // TODO: return error
+                    return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
                 } else if (parts[1] == null) {
-                    // TODO: return error
+                    return MessageFactory.makeErrorMessage(MessageFactory.AUTHENTICATION_ERROR);
                 } else if (sc.hasTimedOut()) {
                     parts[1] = null;
-                    // TODO: return error
+                    return MessageFactory.makeErrorMessage(MessageFactory.COOKIE_TIMEOUT_ERROR);
                 } else {
                     return this.addUser(parts);
                 }
-                break;
             case "USER-LOGIN":
                 if (parts.length != 3) {
-                    // TODO: return error
+                    return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
                 } else {
                     return this.userLogin(parts);
                 }
-                break;
             case "POST-MESSAGE":
                 if (parts.length != 3) {
-                    // TODO: return error
+                    return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
                 } else if (parts[0] == null) {
-                    // TODO: return error
+                    return MessageFactory.makeErrorMessage(MessageFactory.AUTHENTICATION_ERROR);
                 } else if (sc.hasTimedOut()) {
                     parts[1] = null;
-                    // TODO: return error
+                    return MessageFactory.makeErrorMessage(MessageFactory.COOKIE_TIMEOUT_ERROR);
                 } else {
                     return this.postMessage(parts);
                 }
-                break;
             case "GET-MESSAGES":
                 if (parts.length != 3) {
-                    // TODO: return error
+                    return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
                 } else if (parts[0] == null) {
-                    // TODO: return error
+                    return MessageFactory.makeErrorMessage(MessageFactory.AUTHENTICATION_ERROR);
                 } else if (sc.hasTimedOut()) {
                     parts[1] = null;
-                    // TODO: return error
+                    return MessageFactory.makeErrorMessage(MessageFactory.COOKIE_TIMEOUT_ERROR);
                 } else {
                     return this.getMessages(parts);
                 }
-                break;
             default:
-                return null;
+                return MessageFactory.makeErrorMessage(MessageFactory.UNKNOWN_COMMAND_ERROR);
         }
-        return null;
-	}
 }
