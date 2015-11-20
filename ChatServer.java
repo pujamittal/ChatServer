@@ -16,11 +16,13 @@ import java.util.*;
  *
  */
 public class ChatServer {
-	
-	public ChatServer(User[] users, int maxMessages) {
-		// TODO: Replace the following code with the actual code
-		
-	}
+	User[] users;
+    	int numUsers = 1;
+
+    	public ChatServer(User[] users, int maxMessages) {
+        	this.users = users;
+        	users[0] = new User("root", "cs180", new SessionCookie(0));
+    	}
 
 	/**
 	 * Usernames and passwords can only contain alphanumerical values [A-Za-z0-9].
@@ -57,8 +59,24 @@ public class ChatServer {
 	 * @return
 	 */
 	public String userLogin(String[] args) {
-
-	}
+        for (int i = 0; i < users.length; i++) {
+            if (args[1].equals(users[i])) {
+                if (users[i].getCookie() != null) {
+                    if (users[i].getPassword().equals(args[2])) {
+                        Random idGenerator = new Random();
+                        long cookieID = idGenerator.nextInt(9999);
+                        String cookieIDs = String.format("%04d", cookieID);
+                        SessionCookie sc = new SessionCookie(cookieID);
+                        users[i].setCookie(sc);
+                        return "SUCCESS\t" + cookieIDs + "\r\n";
+                    }
+                }
+            } else {
+                MessageFactory.makeErrorMessage(MessageFactory.USERNAME_LOOKUP_ERROR);
+            }
+        }
+        return MessageFactory.makeErrorMessage(MessageFactory.USER_ERROR);
+    }
 
 	/**
 	 * The name variable is the username of the User sending the message.
