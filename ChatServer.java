@@ -126,9 +126,9 @@ public class ChatServer {
 			return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
 		}
 		if (args[2].length() == 0) {
+			return "SUCCESS\r\n";
 		}
-		return "SUCCESS\r\n";
-
+		return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
 	}
 
 
