@@ -5,6 +5,7 @@ public class CircularBuffer {
     private int bufferHead;
     private int indexCounter;
     private int messageCounter;
+    private String prependedCounter; //ask
 
     /**
      * This constructor accepts the maximum number of messages that this buffer can hold. Furthermore, because this is
@@ -18,6 +19,7 @@ public class CircularBuffer {
         this.bufferTail = 0;
         this.indexCounter = 0;
         this.messageCounter = 0;
+        this.prependedCounter = null;
     }
 
     /**
@@ -30,9 +32,26 @@ public class CircularBuffer {
      */
     public void put(String message) {
         if (bufferHead != (bufferTail - 1)) {
-            buffer[bufferHead++] = String.format("%04d", message);
-            messageCounter++;
+            if (messageCounter < 10) {
+                String prependedCounter = "000) " + messageCounter;
+                buffer[bufferHead++] = prependedCounter + message;
+            }
+            if (messageCounter < 100 && messageCounter > 9) {
+                String prependedCounter = "00) " + messageCounter;
+                buffer[bufferHead++] = prependedCounter + message;
+
+            }
+            if (messageCounter < 1000 && messageCounter > 99) {
+                String prependedCounter = "0) " + messageCounter;
+                buffer[bufferHead++] = prependedCounter + message;
+
+            }
+            if (messageCounter < 10000 && messageCounter > 999 ) {
+                String prependedCounter = ") " + messageCounter;
+                buffer[bufferHead++] = prependedCounter + message;
+            }
         }
+        messageCounter++;
         bufferHead = bufferHead % buffer.length;
     }
 
@@ -45,6 +64,13 @@ public class CircularBuffer {
     public String[] getNewest(int numMessages) {
         String[] latestMessages = new String[numMessages];
         String[] noMessages = new String[0];
+        if (numMessages > messageCounter) {
+            System.out.println("test null");
+            return null;
+        }
+        if (numMessages == 0) {
+            return noMessages;
+        }
         if (messageCounter > buffer.length) {
             indexCounter = messageCounter % buffer.length - 1;
             for (int i = 0; i < numMessages; i++) {
@@ -54,18 +80,15 @@ public class CircularBuffer {
                     indexCounter = buffer.length - 1;
                 }
             }
+            return latestMessages;
         } else {
             indexCounter = messageCounter - 1;
             for (int i = 0; i < numMessages; i++) {
                 latestMessages[i] = buffer[indexCounter];
-                indexCounter--;
+                if(indexCounter > 0) {
+                    indexCounter--;
+                }
             }
-        }
-        if (numMessages > messageCounter) {
-            return null;
-        } else if (numMessages == 0) {
-            return noMessages;
-        } else {
             return latestMessages;
         }
     }

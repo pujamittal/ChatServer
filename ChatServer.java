@@ -1,5 +1,4 @@
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 /**
  * <b> CS 180 - Project 4 - Chat Server Skeleton </b>
@@ -19,15 +18,18 @@ import java.util.concurrent.ExecutionException;
 public class ChatServer {
 
 	String[] messagesStored;
-	long[] messageCookies;
 	int numofMessages;
 	User[] users;
 	int numUsers = 1;
 	CircularBuffer circularB;
 
 	public ChatServer(User[] users, int maxMessages) {
-		users[0] = new User("root", "cs180", null);
-		this.users = users;
+		this.users = new User[100];
+		this.users[0] = new User("root", "cs180", null);
+		for (int i = 0 ; i < users.length ; i++) {
+			this.users[i + 1] = users[i];
+			numUsers++;
+		}
 		this.messagesStored = new String[maxMessages];
 		this.numofMessages = 0;
 		this.circularB = new CircularBuffer(maxMessages);
@@ -41,15 +43,9 @@ public class ChatServer {
 	 * @return
 	 */
 	public String addUser(String[] args) {
-		for (int i = 0; i < args.length; i++) {
-			if (args[i] == null) {
-				return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
-			}
-		}
 		if (args[2].matches("[A-Za-z0-9]+") && args[3].matches("[A-Za-z0-9]+")) {
 			if (args[2].length() > 1 && args[2].length() < 20) {
 				if (args[3].length() > 4 && args[3].length() < 40) {
-					SessionCookie sc = new SessionCookie(Long.parseLong(args[1]));
 					User u = new User(args[2], args[3], null);
 					this.users[numUsers] = u;
 					numUsers++;
@@ -70,23 +66,28 @@ public class ChatServer {
 	 * @return
 	 */
 	public String userLogin(String[] args) {
-		for (int i = 0; i < users.length; i++) {
-			if (args[1].equals(users[i])) {
-				if (users[i].getCookie() != null) {
-					if (users[i].getPassword().equals(args[2])) {
-						Random idGenerator = new Random();
-						long cookieID = idGenerator.nextInt(9999);
-						String cookieIDs = String.format("%04d", cookieID);
-						SessionCookie sc = new SessionCookie(cookieID);
-						users[i].setCookie(sc);
-						return "SUCCESS\t" + cookieIDs + "\r\n";
-					}
+		User user = null;
+		for (int i = 0; i < numUsers; i++) {
+			if (users[i].getName().equals(args[1])) {
+				user = users[i];
+				if (user.getCookie() != null) {
+					return MessageFactory.makeErrorMessage(MessageFactory.USER_CONNECTED_ERROR);
 				}
-			} else {
-				MessageFactory.makeErrorMessage(MessageFactory.USERNAME_LOOKUP_ERROR);
+				if (!user.getPassword().equals(args[2])) {
+					return MessageFactory.makeErrorMessage(MessageFactory.AUTHENTICATION_ERROR);
+				}
+				Random idGenerator = new Random();
+				long cookieID = idGenerator.nextInt(10000); //check if user already has the same id
+				String cookieIDs = String.format("%04d", cookieID);
+				SessionCookie sc = new SessionCookie(cookieID);
+				user.setCookie(sc);
+				return "SUCCESS\t" + cookieIDs + "\r\n";
 			}
 		}
-		return MessageFactory.makeErrorMessage(MessageFactory.USER_ERROR);
+		if (user == null) {
+			return MessageFactory.makeErrorMessage(MessageFactory.USERNAME_LOOKUP_ERROR);
+		}
+		return MessageFactory.makeErrorMessage(MessageFactory.USERNAME_LOOKUP_ERROR);
 	}
 
 	/**
@@ -104,7 +105,7 @@ public class ChatServer {
 	 */
 	public String postMessage(String[] args, String name) {
 		if (args[2].trim().length() > 0) {
-			messagesStored[numofMessages] = name + ": " + args[2];
+			circularB.put(args[2]);
 			numofMessages++;
 			return "SUCCESS\r\n";
 		}
@@ -124,14 +125,13 @@ public class ChatServer {
 	 * @return
 	 */
 	public String getMessages(String[] args) {
-		System.out.println("args[2] input: " + args[2] + "args[1] is: " + args[1] + "\n length of the args is " + args[2].length());
 		if (Integer.parseInt(args[2]) < 0) {
 			return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
 		}
 		if (Integer.parseInt(args[2]) == 0) {
 			return "SUCCESS\r\n";
 		}
-		if (Integer.parseInt(args[2]) > 0) {
+		if (Integer.parseInt(args[2]) >= 1) {
 			for (int i = 0; i < Integer.parseInt(args[2]); i++) {
 				if (circularB.getNewest(Integer.parseInt(args[2])).length > Integer.parseInt(args[2])) {
 					return "SUCCESS\t" + circularB.getNewest(Integer.parseInt(args[2]))[i] + "\r\n";
@@ -141,26 +141,6 @@ public class ChatServer {
 		return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
 
 	}
-//		System.out.println("args[2] input: " + args[2] + "args[3] is: " + args[1] + " length of the args is " + args[2].length());
-//		boolean getMes = false;
-//		int x;
-//		try {
-//			//if (Integer.parseInt(args[2]) < 1);
-//				x = Integer.parseInt(args[2]);
-//		} catch (Exception e) {
-//			x = -100;
-//			//return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
-//		}
-//		if (x == -100) {
-//			return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
-//		}
-//		if (x >= 1) {
-//			for (int i = 0; i < numofMessages; i++) {
-//				return "SUCCESS\t" + circularB.getNewest(Integer.parseInt(args[2]))[i] + "\r\n";
-//			}
-//		}
-//		return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
-//	}
 
 	/**
 	 * This method begins server execution.
@@ -242,7 +222,6 @@ public class ChatServer {
 			case "ADD-USER":
 				if (parts[1] != null) {
 					long sessionCookie = Long.parseLong(parts[1]);
-					System.out.println(" index 1 is: add-message " + Long.parseLong(parts[1]));
 					SessionCookie sc = new SessionCookie(sessionCookie);
 					if (parts.length != 4) {
 						return MessageFactory.makeErrorMessage(MessageFactory.FORMAT_COMMAND_ERROR);
@@ -294,7 +273,7 @@ public class ChatServer {
 					}
 				}
 			default:
-				return MessageFactory.makeErrorMessage(MessageFactory.FORMAT_COMMAND_ERROR);
+				return MessageFactory.makeErrorMessage(MessageFactory.UNKNOWN_COMMAND_ERROR);
 		}
 	}
 }
