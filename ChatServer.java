@@ -18,7 +18,6 @@ import java.util.*;
 public class ChatServer {
 
 	String[] messagesStored;
-	int numofMessages;
 	User[] users;
 	int numUsers = 1;
 	CircularBuffer circularB;
@@ -31,7 +30,6 @@ public class ChatServer {
 			numUsers++;
 		}
 		this.messagesStored = new String[maxMessages];
-		this.numofMessages = 0;
 		this.circularB = new CircularBuffer(maxMessages);
 	}
 
@@ -105,8 +103,7 @@ public class ChatServer {
 	 */
 	public String postMessage(String[] args, String name) {
 		if (args[2].trim().length() > 0) {
-			circularB.put(args[2]);
-			numofMessages++;
+			circularB.put(name + ": " + args[2]);
 			return "SUCCESS\r\n";
 		}
 		return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
@@ -134,9 +131,10 @@ public class ChatServer {
 		for (int i = 0; i < messages.length-1; i++) {
 			ms += messages[i] + "\t" ;
 		}
-		if(messages.length!=0) {
+		if (messages.length!=0) {
 			ms = "SUCCESS\t" + ms + messages[messages.length - 1] + "\r\n";
-		}else{
+		}
+		else {
 			ms = "SUCCESS\r\n";
 		}
 		return ms;

@@ -42,19 +42,4 @@ public class SessionCookie {
     public long getID() {
         return id;
     }
-    /**
-     *
-     * public static void main(String[] args) {
-     * Random idGenerator = new Random();
-     * long cookieID = idGenerator.nextInt(9999);
-     * String cookieIDs = String.format("%04d) %s", cookieID,msg);
-     * long cookieIDprepended = Long.parseLong(cookieIDs);
-     * System.out.println(cookieIDprepended);
-     *
-     * String cookieIDs = String.format("%03d", cookieID);
-     * long cookieIDprepended = Long.parseLong(cookieIDs);
-     *
-     * Random idGenerator = new Random();
-     * long cookieID = idGenerator.nextInt(9999);
-     */
 }
