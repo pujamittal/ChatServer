@@ -48,6 +48,7 @@ public class ChatServer {
 					this.users[numUsers] = u;
 					numUsers++;
 					return "SUCCESS\r\n";
+					//update session cookie
 				}
 			}
 		}
@@ -102,12 +103,33 @@ public class ChatServer {
 	 * @return
 	 */
 	public String postMessage(String[] args, String name) {
-		if (args[2].trim().length() > 0) {
-			circularB.put(name + ": " + args[2]);
-			return "SUCCESS\r\n";
+		args[2] = args[2].trim();
+		if(args[2].length() == 0) {
+			return MessageFactory.makeErrorMessage(24);
 		}
-		return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
+		circularB.put(name + ": " + args[2]);
+		return "SUCCESS\r\n";
 	}
+		/*System.out.println(args[2] + "THIS IS ARGS 2");
+		SessionCookie sc = null;
+		if (args[2].trim().length() > 0) {
+			System.out.println("111111");
+			circularB.put(name + ": " + args[2]);
+			System.out.println("THIS IS ARGS 2" + args[2]);
+			return "SUCCESS\r\n";
+			//update sc
+		}
+*//*
+		for (int i = 0; i < numUsers; i++) {
+			if (users[i].getCookie() != null) {
+				if (Long.parseLong(args[1]) == users[i].getCookie().getID()) {
+					sc = users[i].getCookie();
+				}
+			}
+		}
+		sc.updateTimeOfActivity();*//*
+		return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
+	}*/
 
 	/**
 	 * For the request to succeed, the number of messages requested must be >= 1, otherwise an
@@ -122,16 +144,17 @@ public class ChatServer {
 	 * @return
 	 */
 	public String getMessages(String[] args) {
+		System.out.println(args[2]);
 		if (Integer.parseInt(args[2]) < 1) {
 			return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
 		}
-		String[] messages = circularB.getNewest(Integer.parseInt(args[2]));
 		String ms = "";
+		String[] messages = circularB.getNewest(Integer.parseInt(args[2]));
 
 		for (int i = 0; i < messages.length-1; i++) {
 			ms += messages[i] + "\t" ;
 		}
-		if (messages.length!=0) {
+		if (messages.length > 0) {
 			ms = "SUCCESS\t" + ms + messages[messages.length - 1] + "\r\n";
 		}
 		else {
@@ -241,16 +264,10 @@ public class ChatServer {
 				}
 			case "POST-MESSAGE":
 				if (parts[1] != null) {
-//					long sessionCookie = Long.parseLong(parts[1]);
-//					System.out.println(" index 1 is: post-message " + Long.parseLong(parts[1]));
-//					SessionCookie sc = new SessionCookie(sessionCookie);
 					if (parts.length != 3) {
 						return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
 					} else if (parts[0] == null) {
 						return MessageFactory.makeErrorMessage(MessageFactory.AUTHENTICATION_ERROR);
-//					} else if (sc.hasTimedOut()) {
-//						parts[1] = null;
-//						return MessageFactory.makeErrorMessage(MessageFactory.COOKIE_TIMEOUT_ERROR);
 					} else {
 						String name = null;
 						for (int i = 0; i < users.length; i++) {

@@ -1,3 +1,5 @@
+import java.util.Map;
+
 public class CircularBuffer {
 
     String[] buffer;
@@ -29,8 +31,10 @@ public class CircularBuffer {
      * @param message
      */
     public void put(String message) {
+        System.out.println(message);
 
         messageFormatted = String.format("%04d) %s", totalMessagesAllowed, message);
+        System.out.println(messageFormatted);
 
         buffer[messageCounter] = messageFormatted;
         messageCounter++;
@@ -41,8 +45,9 @@ public class CircularBuffer {
         }
         if (messageCounter == buffer.length) {
             messageCounter = 0;
+
         }
-        if (totalMessagesAllowed == 10000) {
+        if (totalMessagesAllowed == 9999) {
             this.totalMessagesAllowed = 0;
         }
     }
@@ -54,23 +59,25 @@ public class CircularBuffer {
      * @return
      */
     public String[] getNewest(int numMessages) {
-        String[] latestMessages = new String[numMessages];
+        int head;
         String[] noMessages = {};
-        int tempIndex = Math.min(numAvailable, numMessages);
+        head = messageCounter - numMessages;
+        String[] latestMessages = new String[numMessages];
+        numMessages = Math.min(numAvailable, numMessages);
         if (numMessages < 0) {
             return null;
         }
-        if (numMessages == 0) {
+        if (numAvailable == 0) {
             return noMessages;
         }
-        if (tempIndex < 0) {
-            tempIndex += numAvailable;
+        if (head < 0) {
+            head += numAvailable;
         }
         for (int i = 0; i < numMessages; i++) {
-            latestMessages[i] = buffer[tempIndex];
-            tempIndex++;
-            if (tempIndex == buffer.length) {
-                tempIndex = 0;
+            latestMessages[i] = buffer[head];
+            head++;
+            if (head == buffer.length) {
+                head = 0;
             }
         }
         return latestMessages;

@@ -217,6 +217,7 @@ public class Project4Test {
         assertTrue("ChatServer: 'getMessage' incorrect response format", student.endsWith("\r\n"));
 
         String[] tab = student.trim().split("\t");
+
         assertEquals("ChatServer: 'getMessage' invalid return value (1 msg sent, 1 requested)", 2,
                 tab.length);
         assertTrue("ChatServer: 'getMessage' invalid return value (1 msg sent, 1 requested)",
