@@ -125,20 +125,21 @@ public class ChatServer {
 	 * @return
 	 */
 	public String getMessages(String[] args) {
-		if (Integer.parseInt(args[2]) < 0) {
+		if (Integer.parseInt(args[2]) < 1) {
 			return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
 		}
-		if (Integer.parseInt(args[2]) == 0) {
-			return "SUCCESS\r\n";
+		String[] messages = circularB.getNewest(Integer.parseInt(args[2]));
+		String ms = "";
+
+		for (int i = 0; i < messages.length-1; i++) {
+			ms += messages[i] + "\t" ;
 		}
-		if (Integer.parseInt(args[2]) >= 1) {
-			for (int i = 0; i < Integer.parseInt(args[2]); i++) {
-				if (circularB.getNewest(Integer.parseInt(args[2])).length > Integer.parseInt(args[2])) {
-					return "SUCCESS\t" + circularB.getNewest(Integer.parseInt(args[2]))[i] + "\r\n";
-				}
-			}
+		if(messages.length!=0) {
+			ms = "SUCCESS\t" + ms + messages[messages.length - 1] + "\r\n";
+		}else{
+			ms = "SUCCESS\r\n";
 		}
-		return MessageFactory.makeErrorMessage(MessageFactory.INVALID_VALUE_ERROR);
+		return ms;
 
 	}
 

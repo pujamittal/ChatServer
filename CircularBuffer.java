@@ -1,11 +1,10 @@
 public class CircularBuffer {
 
     String[] buffer;
-    private int bufferTail;
-    private int bufferHead;
-    private int indexCounter;
+    String messageFormatted;
+    private int numAvailable;
+    private int totalMessagesAllowed;
     private int messageCounter;
-    private String prependedCounter; //ask
 
     /**
      * This constructor accepts the maximum number of messages that this buffer can hold. Furthermore, because this is
@@ -15,11 +14,10 @@ public class CircularBuffer {
      */
     public CircularBuffer(int size) {
         this.buffer = new String[size];
-        this.bufferHead = 0;
-        this.bufferTail = 0;
-        this.indexCounter = 0;
+        this.messageFormatted = null;
+        this.numAvailable = 0;
+        this.totalMessagesAllowed = 0;
         this.messageCounter = 0;
-        this.prependedCounter = null;
     }
 
     /**
@@ -31,28 +29,22 @@ public class CircularBuffer {
      * @param message
      */
     public void put(String message) {
-        if (bufferHead != (bufferTail - 1)) {
-            if (messageCounter < 10) {
-                String prependedCounter = "000) " + messageCounter;
-                buffer[bufferHead++] = prependedCounter + message;
-            }
-            if (messageCounter < 100 && messageCounter > 9) {
-                String prependedCounter = "00) " + messageCounter;
-                buffer[bufferHead++] = prependedCounter + message;
 
-            }
-            if (messageCounter < 1000 && messageCounter > 99) {
-                String prependedCounter = "0) " + messageCounter;
-                buffer[bufferHead++] = prependedCounter + message;
+        messageFormatted = String.format("%04d) %s", totalMessagesAllowed, message);
 
-            }
-            if (messageCounter < 10000 && messageCounter > 999 ) {
-                String prependedCounter = ") " + messageCounter;
-                buffer[bufferHead++] = prependedCounter + message;
-            }
-        }
+        buffer[messageCounter] = messageFormatted;
         messageCounter++;
-        bufferHead = bufferHead % buffer.length;
+        totalMessagesAllowed++;
+
+        if (numAvailable < buffer.length) {
+            numAvailable++;
+        }
+        if (messageCounter == buffer.length) {
+            messageCounter = 0;
+        }
+        if (totalMessagesAllowed == 10000) {
+            this.totalMessagesAllowed = 0;
+        }
     }
 
     /**
@@ -63,33 +55,24 @@ public class CircularBuffer {
      */
     public String[] getNewest(int numMessages) {
         String[] latestMessages = new String[numMessages];
-        String[] noMessages = new String[0];
-        if (numMessages > messageCounter) {
-            System.out.println("test null");
+        String[] noMessages = {};
+        int tempIndex = Math.min(numAvailable, numMessages);
+        if (numMessages < 0) {
             return null;
         }
         if (numMessages == 0) {
             return noMessages;
         }
-        if (messageCounter > buffer.length) {
-            indexCounter = messageCounter % buffer.length - 1;
-            for (int i = 0; i < numMessages; i++) {
-                latestMessages[i] = buffer[indexCounter];
-                indexCounter--;
-                if (indexCounter < 0) {
-                    indexCounter = buffer.length - 1;
-                }
-            }
-            return latestMessages;
-        } else {
-            indexCounter = messageCounter - 1;
-            for (int i = 0; i < numMessages; i++) {
-                latestMessages[i] = buffer[indexCounter];
-                if(indexCounter > 0) {
-                    indexCounter--;
-                }
-            }
-            return latestMessages;
+        if (tempIndex < 0) {
+            tempIndex += numAvailable;
         }
+        for (int i = 0; i < numMessages; i++) {
+            latestMessages[i] = buffer[tempIndex];
+            tempIndex++;
+            if (tempIndex == buffer.length) {
+                tempIndex = 0;
+            }
+        }
+        return latestMessages;
     }
 }
